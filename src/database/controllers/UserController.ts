@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
-import { getRepository } from 'typeorm';
-import { User } from '../models/User';
+import { getCustomRepository } from 'typeorm';
+import { UsersRepository } from '../repositories/UsersRepository';
 
 class UserController {
   async create(req: Request, res: Response) {
     const { name, email } = req.body;
-    const userRepository = getRepository(User);
+    const usersRepository = getCustomRepository(UsersRepository);
 
-    const userAlreadyExists = await userRepository.findOne({ email });
+    const userAlreadyExists = await usersRepository.findOne({ email });
 
     if (userAlreadyExists) {
       return res.status(400).json({
@@ -16,30 +16,28 @@ class UserController {
       });
     }
 
-    const newUser = userRepository.create({
+    const newUser = usersRepository.create({
       name, email
     });
-    await userRepository.save(newUser);
+    await usersRepository.save(newUser);
 
-    return res.json(newUser);
+    return res.status(201).json(newUser);
   }
 
   async delete(req: Request, res: Response) {
-    const id = req.params.id;
+    const email = req.params.email;
 
-    const userRepository = getRepository(User);
+    const usersRepository = getCustomRepository(UsersRepository);
 
     try {
-      await userRepository.delete({ id });
+      await usersRepository.delete({ email });
     } catch (error) {
-      return res.json({
-        error: true,
+      return res.status(400).json({
         message: error
       });
     }
 
-    return res.json({
-      error: false,
+    return res.status(200).json({
       message: "User successfully deleted!"
     })
   }
